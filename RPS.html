@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <style>
+body {
+   background: url('images/background.jpg');
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.login-container, .game-container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 350px;
+}
+        .game-container { display: none; }
+        .choices button {
+            background-color: yellow;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .choices button img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        #redeemBtn {
+            display: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .popup button {
+            margin-top: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <h2>Login to Play</h2>
+        <input type="email" id="emailInput" placeholder="Enter your email" required>
+        <button onclick="login()">Login</button>
+    </div>
+    
+    <div class="game-container" id="gameContainer">
+        <h1>Rock Paper Scissors - Earn Tokens!</h1>
+        <p>Tokens: <span id="tokens">0</span></p>
+        <p>Lives: <span id="lives">30</span></p>
+        <div class="choices">
+            <button onclick="playGame('rock')"><img src="C:\Users\user\Desktop\TELEGRAM BOT\RPS WEB APP\images\rock.png"></button>
+            <button onclick="playGame('paper')"><img src="C:\Users\user\Desktop\TELEGRAM BOT\RPS WEB APP\images\paper.png"></button>
+            <button onclick="playGame('scissors')"><img src="C:\Users\user\Desktop\TELEGRAM BOT\RPS WEB APP\images\scissors.png"></button>
+        </div>
+        <p id="result"></p>
+        <button id="redeemBtn" onclick="redeemCode()">Redeem</button>
+    </div>
+    
+    <div id="popup" class="popup">
+        <span class="close" onclick="closePopup()">&times;</span>
+        <p id="popupMessage"></p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+    
+    <script>
+        let userEmail = localStorage.getItem("userEmail");
+        let tokens = parseInt(localStorage.getItem(userEmail + "_tokens")) || 0;
+        let lives = parseInt(localStorage.getItem("lives")) || 30;
+        let lastReset = localStorage.getItem("lastReset") || new Date().getTime();
+
+        function resetLives() {
+            let now = new Date().getTime();
+            if (now - lastReset >= 86400000) {
+                lives = 30;
+                localStorage.setItem("lives", lives);
+                localStorage.setItem("lastReset", now);
+            }
+        }
+        resetLives();
+
+        function showLogin() {
+            document.getElementById("loginContainer").style.display = "block";
+            document.getElementById("gameContainer").style.display = "none";
+        }
+
+        if (!userEmail) {
+            showLogin();
+        } else {
+            document.getElementById("loginContainer").style.display = "none";
+            document.getElementById("gameContainer").style.display = "block";
+            document.getElementById("tokens").innerText = tokens;
+            document.getElementById("lives").innerText = lives;
+        }
+
+        function login() {
+            let email = document.getElementById("emailInput").value;
+            if (email) {
+                localStorage.setItem("userEmail", email);
+                userEmail = email;
+                document.getElementById("loginContainer").style.display = "none";
+                document.getElementById("gameContainer").style.display = "block";
+            } else {
+                alert("Please enter a valid email");
+            }
+        }
+
+        function showPopup(message) {
+            let popup = document.getElementById("popup");
+            let popupMessage = document.getElementById("popupMessage");
+
+            popupMessage.innerText = message;
+            popup.style.display = "block";
+        }
+
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+
+        function playGame(userChoice) {
+            if (lives <= 0) {
+                showPopup("You have no lives left! Come back after 24 hours.");
+                return;
+            }
+
+            const choices = ["rock", "paper", "scissors"];
+            const computerChoice = choices[Math.floor(Math.random() * 3)];
+            let resultText = `Computer chose ${computerChoice}. `;
+            
+            if (userChoice === computerChoice) {
+                resultText += "It's a tie!";
+            } else if (
+                (userChoice === "rock" && computerChoice === "scissors") ||
+                (userChoice === "paper" && computerChoice === "rock") ||
+                (userChoice === "scissors" && computerChoice === "paper")
+            ) {
+                resultText += "You win!";
+                tokens++;
+                localStorage.setItem(userEmail + "_tokens", tokens);
+                document.getElementById("tokens").innerText = tokens;
+            } else {
+                resultText += "You lose!";
+            }
+            
+            document.getElementById("result").innerText = resultText;
+            lives--;
+            localStorage.setItem("lives", lives);
+            document.getElementById("lives").innerText = lives;
+
+            document.getElementById("redeemBtn").style.display = tokens >= 1000 ? "block" : "none";
+        }
+
+        function redeemCode() {
+            console.log("Redeem button clicked!");
+
+            if (tokens < 1000) {
+                showPopup("Not enough tokens! You need at least 1000 tokens to redeem.");
+                return;
+            }
+
+            fetch("codes.txt")
+                .then(response => response.text())
+                .then(data => {
+                    const codes = data.split("\n").map(code => code.trim()).filter(code => code);
+                    if (codes.length > 0) {
+                        const randomCode = codes[Math.floor(Math.random() * codes.length)];
+
+                        tokens -= 1000;
+                        localStorage.setItem(userEmail + "_tokens", tokens);
+                        document.getElementById("tokens").innerText = tokens;
+
+                        showPopup(`Your Redeem Code: ${randomCode}`);
+                    } else {
+                        showPopup("No redeem codes available.");
+                    }
+                })
+                .catch(error => {
+                    showPopup("Error fetching redeem codes.");
+                    console.error("Fetch error:", error);
+                });
+        }
+    </script>
+</body>
+</html>
